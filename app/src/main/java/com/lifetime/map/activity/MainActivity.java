@@ -1,4 +1,4 @@
-package com.lifetime.map.main;
+package com.lifetime.map.activity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -6,7 +6,6 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -23,7 +22,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -49,7 +47,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     Geocoder geocoder;
 
+    private EditText startPoint;
+
     //test
     List<LatLng> listPoints;
 
@@ -85,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
 
         mSearchText = findViewById(R.id.input_search);
+
+        startPoint = findViewById(R.id.input_start_point);
 
         listPoints = new ArrayList<>();
 
@@ -124,57 +125,29 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-//        mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
-//            @Override
-//            public void onMapLongClick(LatLng latLng) {
-//                mMap.clear();
-//
-//                getCurrentLocationNoMove();
-//
-//                List<Address> resultAddresses = null;
-//
-//                for (LatLng latLngLeuLeu : locations) {
-//                    try {
-//                        resultAddresses = geocoder.getFromLocation(latLngLeuLeu.latitude, latLngLeuLeu.longitude, 1);
-//                    } catch (IOException e){
-//                        e.printStackTrace();
-//                    }
-//                    mMap.addMarker(new MarkerOptions()
-//                            .position(latLngLeuLeu)
-//                            .title(resultAddresses.get(0).getAddressLine(0))
-//                    );
-//                }
-//
-//                showCurrentPlaceInformation(latLng);
-//            }
-//        });
-
         mMap.setOnMapLongClickListener(new GoogleMap.OnMapLongClickListener() {
             @Override
             public void onMapLongClick(LatLng latLng) {
-                if(listPoints.size() == 2) {
-                    listPoints.clear();
-                    mMap.clear();
+                mMap.clear();
+
+                getLocationValueNoMoveCamera();
+
+                List<Address> resultAddresses = null;
+
+                for (LatLng latLngLeuLeu : locations) {
+                    try {
+                        resultAddresses = geocoder.getFromLocation(latLngLeuLeu.latitude, latLngLeuLeu.longitude, 1);
+                    } catch (IOException e){
+                        e.printStackTrace();
+                    }
+                    mMap.addMarker(new MarkerOptions()
+                            .position(latLngLeuLeu)
+                            .title(resultAddresses.get(0).getAddressLine(0))
+                    );
                 }
 
-                listPoints.add(latLng);
-
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(latLng);
-
-                if(listPoints.size()==1){
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN));
-                } else {
-                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-                }
-                mMap.addMarker(markerOptions);
-
-                if(listPoints.size()==2){
-                    String url = getRequestUrl(listPoints.get(0),listPoints.get(1));
-                    new TaskRequestDirections().execute(url);
-                }
+                showCurrentPlaceInformation(latLng);
             }
-
         });
     }
 
@@ -346,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void getCurrentLocationNoMove(){
+    private void getLocationValueNoMoveCamera(){
         Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
         locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
             @Override
@@ -370,6 +343,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void init(){
         Log.d("TAG","init: initializing");
 
+        findViewById(R.id.direction).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showDirectionResult();
+            }
+        });
+
         mSearchText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
@@ -385,6 +365,71 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
+    private void showDirectionResult(){
+
+        EditText edtStart = findViewById(R.id.input_start_point);
+        EditText edtEnd = findViewById(R.id.input_search);
+
+        final String sStartPoint = edtStart.getText().toString();
+        final String sEndPoint = edtEnd.getText().toString();
+
+        if(sStartPoint.isEmpty()){
+            edtStart.setError("required");
+            edtStart.requestFocus();
+            return;
+        }
+
+        if(sEndPoint.isEmpty()){
+            edtEnd.setError("required");
+            edtEnd.requestFocus();
+            return;
+        }
+
+        EditText edtStartPoint = findViewById(R.id.input_start_point);
+        EditText edtEndPoint = findViewById(R.id.input_search);
+
+        List<Address> addressesStart = null;
+        List<Address> addressesEnd = null;
+        try{
+            addressesStart = geocoder.getFromLocationName(edtStartPoint.getText().toString(),1);
+            addressesEnd = geocoder.getFromLocationName(edtEndPoint.getText().toString(),1);
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+        if(addressesStart.size()>0 && addressesEnd.size()>0){
+            double latStart = addressesStart.get(0).getLatitude();
+            double lonStart = addressesStart.get(0).getLongitude();
+            LatLng startPoint = new LatLng(latStart,lonStart);
+
+            double latEnd = addressesEnd.get(0).getLatitude();
+            double lonEnd = addressesEnd.get(0).getLongitude();
+            LatLng endPoint = new LatLng(latEnd,lonEnd);
+
+            String url = getRequestUrl(startPoint,endPoint);
+            new TaskRequestDirections().execute(url);
+
+            mMap.clear();
+
+            mMap.addMarker(new MarkerOptions()
+                    .position(startPoint)
+                    .title(addressesStart.get(0).getAddressLine(0)));
+
+            mMap.addMarker(new MarkerOptions()
+                    .position(endPoint)
+                    .title(addressesEnd.get(0).getAddressLine(0)));
+
+            LatLngBounds bounds = new LatLngBounds.Builder()
+                    .include(startPoint)
+                    .include(endPoint)
+                    .build();
+            int padding = 200;
+            CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(bounds,padding);
+            mMap.animateCamera(cu);
+
+        }
+    }
+
     private void showResult(){
         final CameraUpdate zoom = CameraUpdateFactory.zoomTo(12);
 
@@ -392,7 +437,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         final MarkerOptions mp = new MarkerOptions();
         //declare a EditText to get user informed address
         EditText etEndereco = findViewById(R.id.input_search);
-
 
         List<Address> addresses = null;
         try{

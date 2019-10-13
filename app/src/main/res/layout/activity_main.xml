@@ -4,12 +4,47 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".main.MainActivity">
-
-
+    tools:context=".activity.MainActivity">
 
     <RelativeLayout
+        android:id="@+id/relLayout0"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:elevation="10dp"
+        android:background="@drawable/white_border">
 
+        <Button
+            android:id="@+id/direction"
+            android:background="@drawable/ic_subdirectory_arrow_right"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_centerVertical="true"/>
+
+        <ImageView
+            android:layout_marginLeft="-5dp"
+            android:layout_marginTop="-5dp"
+            android:background="@drawable/direction_button_border"
+            android:layout_alignLeft="@id/direction"
+            android:layout_alignTop="@id/direction"
+            android:layout_width="30dp"
+            android:layout_height="30dp"/>
+
+        <EditText
+            android:layout_marginLeft="10dp"
+            android:background="@android:color/transparent"
+            android:hint="Enter Start Point Of Direction"
+            android:id="@+id/input_start_point"
+            android:textColor="#000"
+            android:textSize="15sp"
+            android:layout_toRightOf="@id/direction"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:imeOptions="actionSearch"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_below="@id/relLayout0"
         android:id="@+id/relLayout1"
         android:layout_width="match_parent"
         android:layout_height="45dp"
