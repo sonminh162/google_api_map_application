@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Map</string>
     <string name="map_api_key">AIzaSyDqcgCGwX4LqaxpwSNnIVZh85gaedU_BJ8</string>
+    <string name="app_id">IHvLTkkCTu4oUixgJ4gR</string>
+    <string name="app_code">E_CvlpVwmJtn3uVlJvqPlg</string>
 
     <string name="title_activity_maps">Current Place Details</string>
     <string name="default_info_title">Default Location</string>
